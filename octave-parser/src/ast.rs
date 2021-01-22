@@ -1,9 +1,9 @@
 use crate::node::{Node, Tree};
 use crate::value::Matrix;
+use flurry::HashMapRef;
 use octave_typesystem::{SimpleType, Type};
-use flurry::{HashMapRef};
-use thiserror::Error;
 use std::ops::Deref;
+use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
 pub enum TypeError {
@@ -90,9 +90,17 @@ impl Expr {
         match self {
             Self::LitString(_) => Type::SimpleType(SimpleType::String),
             Self::LitNumber(_) => Type::SimpleType(SimpleType::Double),
-            Self::Range(s, _, _) => Type::Matrix {
+            Self::Range(s, st, e) => Type::Matrix {
                 size: None,
-                ty: s.type_of(ctx).simple_type().unwrap_or(SimpleType::Unknown),
+                ty: s
+                    .type_of(ctx.clone())
+                    .simple_type()
+                    .or_else(|| {
+                        st.as_ref()
+                            .and_then(|n| n.type_of(ctx.clone()).simple_type())
+                    })
+                    .or_else(|| e.type_of(ctx).simple_type())
+                    .unwrap_or(SimpleType::Unknown),
             },
             Self::Incr(_) | Self::Decr(_) => Type::SimpleType(SimpleType::Void),
             Self::Call(c, _) => {
@@ -114,15 +122,14 @@ impl Expr {
             },
         }
     }
-}
 
-impl Expr {
     pub fn get_value(&self) -> Option<f64> {
         match self {
             Expr::LitNumber(v) => Some(*v),
             _ => None,
         }
     }
+
     pub(crate) fn get_matrix(&self) -> Option<Matrix<f64>> {
         match self {
             Expr::Matrix(m) => m.as_ref().map(|e| e.data.get_value()).transpose(),
@@ -209,12 +216,12 @@ impl Statement {
         match self {
             Self::Assignment(i, e) => {
                 ctx.insert(i.clone(), e.type_of(ctx.clone()));
-            },
+            }
             Self::Block(v) => {
                 for s in v {
                     s.add_bindings(ctx.clone());
                 }
-            },
+            }
             Self::IgnoreOutput(s) => s.add_bindings(ctx),
             _ => {}
         }

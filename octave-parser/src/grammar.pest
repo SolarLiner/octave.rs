@@ -13,7 +13,8 @@ statement = _{ assignment | expr }
 statement_semi = { statement ~ ";" }
 assignment = { identifier ~ "=" ~ expr }
 
-expr = { binary | value }
+expr = { range_operand ~ (":" ~ range_operand ~ (":" ~ range_operand)?)? }
+range_operand = _{ binary | value }
 binary = { atom ~ (op ~ atom)* }
 atom = _{ call | value }
 op = _{ add | sub | mul | div | pow | access }

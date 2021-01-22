@@ -6,6 +6,7 @@ use tower_lsp::{
 
 use model::Model;
 use octave_parser::node::Tree;
+use octave_typesystem::Type;
 use std::ops::Deref;
 
 mod model;
@@ -80,7 +81,17 @@ impl LanguageServer for Backend {
             self.model
                 .get_variables()
                 .into_iter()
-                .map(|v| CompletionItem::new_simple(v.clone(), v))
+                .map(|(s, t)| CompletionItem {
+                    label: s,
+                    detail: Some(t.to_string()),
+                    kind: Some(get_type_symbol(&t)),
+                    ..Default::default()
+                })
+                .chain(get_keywords().into_iter().map(|k| CompletionItem {
+                    label: k,
+                    kind: Some(CompletionItemKind::Keyword),
+                    ..Default::default()
+                }))
                 .collect(),
         )))
     }
@@ -91,7 +102,8 @@ impl LanguageServer for Backend {
             &params.text_document_position_params.text_document.uri,
             &guard,
         ) {
-            Ok(data.ast
+            Ok(data
+                .ast
                 .at_pos(params.text_document_position_params.position.into())
                 .map(|s| Hover {
                     contents: HoverContents::Scalar(MarkedString::LanguageString(LanguageString {
@@ -106,6 +118,33 @@ impl LanguageServer for Backend {
         } else {
             Ok(None)
         }
+    }
+}
+
+fn get_keywords() -> Vec<String> {
+    vec![
+        "function",
+        "endfunction",
+        "for",
+        "endfor",
+        "while",
+        "endwhile",
+        "end",
+    ]
+    .into_iter()
+    .map(Into::into)
+    .collect()
+}
+
+fn get_type_symbol(ty: &Type) -> CompletionItemKind {
+    match ty {
+        Type::SimpleType(_)
+        | Type::Matrix {
+            size: Some((1, 1)), ..
+        } => CompletionItemKind::Variable,
+        Type::Matrix { .. } => CompletionItemKind::Struct,
+        Type::Callable(_) => CompletionItemKind::Function,
+        Type::Unknown => CompletionItemKind::Unit,
     }
 }
 

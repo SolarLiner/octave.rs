@@ -71,11 +71,18 @@ impl Model {
             .insert(uri, DocumentData { doc, ast, bindings }, &guard);
     }
 
-    pub fn get_variables(&self) -> Vec<String> {
+    pub fn get_variables(&self) -> Vec<(String, Type)> {
         self.documents
             .pin()
             .values()
-            .flat_map(|data| data.bindings.pin().keys().cloned().collect::<Vec<_>>().into_iter())
+            .flat_map(|data| {
+                data.bindings
+                    .pin()
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .collect::<Vec<_>>()
+                    .into_iter()
+            })
             .collect()
     }
 

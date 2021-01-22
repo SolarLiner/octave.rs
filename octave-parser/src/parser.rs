@@ -62,6 +62,28 @@ fn process_stmt(pair: Pair<Rule>) -> Node<Statement> {
         },
         Rule::expr => Node {
             span: to_range(pair.as_span()),
+            data: Statement::Expr({
+                let span = pair.as_span();
+                let mut it = pair.into_inner().map(process_expr).map(|n| n.map(Box::new));
+                let first = it.next().unwrap();
+                Node {
+                    span: to_range(span),
+                    data: {
+                        if let Some(second) = it.next() {
+                            if let Some(third) = it.next() {
+                                Expr::Range(first, Some(second), third)
+                            } else {
+                                Expr::Range(first, None, second)
+                            }
+                        } else {
+                            first.as_deref().map(Clone::clone).data
+                        }
+                    }
+                }
+            })
+        },
+        Rule::range_operand => Node {
+            span: to_range(pair.as_span()),
             data: Statement::Expr(process_expr(pair.into_inner().next().unwrap()))
         },
         Rule::EOI => Node {
@@ -238,7 +260,7 @@ mod tests {
         let expected_mat = Matrix::from_vecs(vec![vec!["a", "b", "c"]]);
         println!("{:#?}", actual);
         let actual_mat = if let Statement::Block(v) = actual.deref() {
-            if let Statement::Expr(Expr::Matrix(m)) = v[0].deref() {
+            if let Statement::Expr(Node { data: Expr::Matrix(m), ..}) = v[0].deref() {
                 m.as_ref().map(|n| {
                     if let Expr::Identifier(a) = n.deref() {
                         a.as_str()
@@ -259,6 +281,13 @@ mod tests {
         let actual = parse("[1 2 3; 4 5]");
         println!("{:#?}", actual);
         assert_eq!(1, actual.as_ref().get_errors().len());
+    }
+
+    #[test]
+    fn range() {
+        let actual = parse("0:0.001:1");
+        println!("{:#?}", actual);
+        assert_eq!(0, actual.as_ref().get_errors().len());
     }
 
     #[test]
