@@ -1,0 +1,90 @@
+{
+  "name": "octave",
+  "publisher": "solarliner",
+  "displayName": "Octave",
+  "description": "Octave language support for VS Code",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.52.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:octave"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "octave",
+        "filenamePatterns": [
+          "*.m"
+        ],
+        "aliases": [
+          "Octave",
+          "octave"
+        ],
+        "extensions": [
+          ".m"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "octave",
+        "scopeName": "source.octave",
+        "path": "./syntaxes/octave.tmLanguage"
+      }
+    ],
+    "configuration": {
+      "title": "Octave",
+      "properties": {
+        "octave.lspPath": {
+          "type": "string",
+          "scope": "machine-overridable",
+          "default": "octave-lsp",
+          "description": "Path to the Octave LSP executable"
+        },
+        "octave.launcher": {
+          "type": "string",
+          "scope": "machine-overridable",
+          "default": "octave",
+          "description": "Command line to launch Octave (supports arguments)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run package",
+    "compile": "webpack --config ./build/node-extension.webpack.config.js",
+    "watch": "webpack --watch --config ./build/node-extension.webpack.config.js",
+    "package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js",
+    "test-compile": "tsc -p ./",
+    "test-watch": "tsc -watch -p ./",
+    "pretest": "yarn run test-compile && yarn run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.22",
+    "@types/vscode": "^1.52.0",
+    "@typescript-eslint/eslint-plugin": "^4.14.0",
+    "@typescript-eslint/parser": "^4.14.0",
+    "eslint": "^7.18.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.2.1",
+    "ts-loader": "^8.0.14",
+    "typescript": "^4.1.3",
+    "vscode-test": "^1.4.1",
+    "webpack": "^5.16.0",
+    "webpack-cli": "^4.4.0"
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.1.13",
+    "vscode-languageclient": "^6.1.3"
+  }
+}

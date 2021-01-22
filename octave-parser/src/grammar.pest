@@ -1,0 +1,51 @@
+//
+// Created by intellij-pest on 2021-01-20
+// grammar
+// Author: SolarLiner
+//
+
+//COMMENT = _{ ("%" | "#") ~ (!("\n") ~ ANY)* ~ "\n" }
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+toplevel = { SOI ~ statements? ~ EOI }
+statements = _{ (statement_semi | statement)* }
+statement = _{ assignment | expr }
+statement_semi = { statement ~ ";" }
+assignment = { identifier ~ "=" ~ expr }
+
+expr = { binary | value }
+binary = { atom ~ (op ~ atom)* }
+atom = _{ call | value }
+op = _{ add | sub | mul | div | pow | access }
+	add = {"+"}
+    sub = {"-"}
+    mul = {"*"}
+    div = {"/"}
+    pow = {"^"}
+    access = {"."}
+
+call = { identifier ~ "(" ~ (expr ~ ("," ~ expr)*)? ~ ")" }
+value = _{ matrix | single_value }
+matrix = { "[" ~ (line ~ (";" ~ line)*)? ~ "]" }
+single_value = ${ literal }
+line = ${ (literal ~ (((WHITESPACE* ~ "," ~ WHITESPACE*) | WHITESPACE+) ~ literal)*)? }
+literal = _{ string | number | identifier }
+
+identifier = @{ (ALPHABETIC | "_") ~ (ALPHABETIC | ASCII_DIGIT | "_")* }
+string = ${ ("\"" ~ char_double* ~ "\"") | ("'" ~ char_simple* ~ "'") }
+char_double = @{
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+char_simple = @{
+    !("'" ~ "\\") ~ ANY
+    | "\\" ~ ("'" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+number = @{
+    "-"?
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+    ~ ("." ~ ASCII_DIGIT*)?
+    ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
