@@ -1,2 +1,2 @@
 [workspace]
-members = ["octave-lsp", "octave-parser"]
+members = ["octave-lsp", "octave-parser", "lsp-textdocument"]

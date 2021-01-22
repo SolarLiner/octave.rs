@@ -1,0 +1,11 @@
+[package]
+name = "lsp-textdocument"
+version = "0.1.0"
+authors = ["Nathan Graule <solarliner@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lsp-types = "0.81"
+thiserror = "1.0"

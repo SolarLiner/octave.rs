@@ -422,6 +422,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "lsp-textdocument"
+version = "0.1.0"
+dependencies = [
+ "lsp-types",
+ "thiserror",
+]
+
+[[package]]
 name = "lsp-types"
 version = "0.81.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -568,7 +576,9 @@ name = "octave-lsp"
 version = "0.1.0"
 dependencies = [
  "flurry",
+ "lsp-textdocument",
  "octave-parser",
+ "thiserror",
  "tokio",
  "tower-lsp",
 ]
@@ -852,6 +862,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76cc616c6abf8c8928e2fdcc0dbfab37175edd8fb49a4641066ad1364fdab146"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9be73a2caec27583d0046ef3796c3794f868a5bc813db689eed00c7631275cd1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
