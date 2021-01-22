@@ -60,7 +60,10 @@ fn process_stmt(pair: Pair<Rule>) -> Node<Statement> {
                     .unwrap(),
             ),
         },
-        Rule::expr => process_expr(pair.into_inner().next().unwrap()).map(Statement::Expr),
+        Rule::expr => Node {
+            span: to_range(pair.as_span()),
+            data: Statement::Expr(process_expr(pair.into_inner().next().unwrap()))
+        },
         Rule::EOI => Node {
             span: to_range(pair.as_span()),
             data: Statement::EOI,

@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/octave-lsp/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/octave-parser/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/lsp-textdocument/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/octave-typesystem/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

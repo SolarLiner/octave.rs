@@ -1,9 +1,42 @@
+use crate::ast::{Expr, Statement};
+use lsp_types as lsp;
 use std::ops::{Deref, Range};
+
+pub trait Tree: Clone {
+    type Item;
+    fn children(&self) -> Vec<Self::Item>;
+}
+
+impl<'a, T: Tree> Tree for &'a T {
+    type Item = T::Item;
+
+    fn children(&self) -> Vec<Self::Item> {
+        T::children(self)
+    }
+}
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Position {
     pub line: usize,
     pub col: usize,
+}
+
+impl From<lsp::Position> for Position {
+    fn from(s: lsp::Position) -> Self {
+        Self {
+            line: (s.line + 1) as usize,
+            col: (s.character + 1) as usize,
+        }
+    }
+}
+
+impl From<Position> for lsp::Position {
+    fn from(p: Position) -> Self {
+        Self {
+            line: (p.line - 1) as u64,
+            character: (p.col - 1) as u64,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -42,7 +75,7 @@ impl<T> Node<T> {
     }
 }
 
-impl<T, B: Deref<Target=T>> Node<B> {
+impl<T, B: Deref<Target = T>> Node<B> {
     pub fn as_deref(&self) -> Node<&T> {
         Node {
             span: self.span.clone(),
@@ -91,5 +124,45 @@ impl<T> Node<Option<T>> {
             }),
             None => None,
         }
+    }
+}
+
+impl Node<&Expr> {
+    pub fn at_pos(&self, pos: Position) -> Option<Node<Expr>> {
+        if self.span.contains(&pos) {
+            Some(match self.data {
+                Expr::Error(_) | Expr::Identifier(_) | Expr::LitNumber(_) | Expr::LitString(_) => Some(self.clone().map(Clone::clone)),
+                Expr::Matrix(m) => m.iter().filter_map(|n| n.as_ref().at_pos(pos)).next(),
+                Expr::Op(_, a, b) => a.as_deref().at_pos(pos).or_else(|| b.as_deref().at_pos(pos)),
+                Expr::Call(c, v) => c.as_deref().at_pos(pos).or_else(|| v.iter().filter_map(|n| n.as_ref().at_pos(pos)).next()),
+                Expr::Decr(e) | Expr::Incr(e) => e.as_deref().at_pos(pos),
+                Expr::Range(s, st, e) => s.as_deref().at_pos(pos).or_else(|| st.as_ref().and_then(|n| n.as_deref().at_pos(pos))).or_else(|| e.as_deref().at_pos(pos)),
+            }.unwrap_or(self.clone().map(Clone::clone)))
+        } else {
+            None
+        }
+    }
+}
+
+impl Node<&Statement> {
+    pub fn at_pos(&self, pos: Position) -> Option<Node<Expr>> {
+        if self.span.contains(&pos) {
+            match self.data {
+                Statement::Expr(e) => e.as_ref().at_pos(pos),
+                Statement::Assignment(_, e) => e.as_ref().at_pos(pos),
+                Statement::AugAssignment(_, _, e) => e.as_ref().at_pos(pos),
+                Statement::Block(v) => v.iter().filter_map(|n| n.as_ref().at_pos(pos)).next(),
+                Statement::IgnoreOutput(e) => e.as_deref().at_pos(pos),
+                Statement::EOI | Statement::Error(_) => None,
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl Node<Statement> {
+    pub fn at_pos(&self, pos: Position) -> Option<Node<Expr>> {
+        self.as_ref().at_pos(pos)
     }
 }

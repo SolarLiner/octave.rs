@@ -5,6 +5,9 @@ use tower_lsp::{
 };
 
 use model::Model;
+use octave_parser::node::Tree;
+use std::ops::Deref;
+
 mod model;
 
 #[derive(Debug)]
@@ -30,6 +33,7 @@ impl LanguageServer for Backend {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
                     TextDocumentSyncKind::Full,
                 )),
+                hover_provider: Some(HoverProviderCapability::Simple(true)),
                 completion_provider: Some(CompletionOptions::default()),
                 ..Default::default()
             },
@@ -79,6 +83,29 @@ impl LanguageServer for Backend {
                 .map(|v| CompletionItem::new_simple(v.clone(), v))
                 .collect(),
         )))
+    }
+
+    async fn hover(&self, params: HoverParams) -> LspResult<Option<Hover>> {
+        let guard = self.model.guard();
+        if let Some(data) = self.model.document(
+            &params.text_document_position_params.text_document.uri,
+            &guard,
+        ) {
+            Ok(data.ast
+                .at_pos(params.text_document_position_params.position.into())
+                .map(|s| Hover {
+                    contents: HoverContents::Scalar(MarkedString::LanguageString(LanguageString {
+                        language: "text".into(),
+                        value: format!("{}", s.type_of(data.bindings.pin())),
+                    })),
+                    range: Some(Range {
+                        start: s.span().start.into(),
+                        end: s.span().end.into(),
+                    }),
+                }))
+        } else {
+            Ok(None)
+        }
     }
 }
 

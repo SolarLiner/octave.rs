@@ -10,6 +10,7 @@ edition = "2018"
 flurry = "0.3"
 lsp-textdocument = { path = "../lsp-textdocument" }
 octave-parser = { path = "../octave-parser" }
+octave-typesystem = { path = "../octave-typesystem" }
 thiserror = "1.0"
 tower-lsp = "0.13"
 tokio = { version = "0.2", features = ["full"]}

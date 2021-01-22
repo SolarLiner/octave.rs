@@ -578,6 +578,7 @@ dependencies = [
  "flurry",
  "lsp-textdocument",
  "octave-parser",
+ "octave-typesystem",
  "thiserror",
  "tokio",
  "tower-lsp",
@@ -587,10 +588,18 @@ dependencies = [
 name = "octave-parser"
 version = "0.1.0"
 dependencies = [
+ "flurry",
  "lazy_static",
+ "lsp-types",
+ "octave-typesystem",
  "pest",
  "pest_derive",
+ "thiserror",
 ]
+
+[[package]]
+name = "octave-typesystem"
+version = "0.1.0"
 
 [[package]]
 name = "once_cell"
